@@ -34,6 +34,7 @@ namespace summary_extractor
             else {
                 // ファイルを作成する
                 FileStream fileStream = fileInfo.Create();
+                fileStream.Close();
             }
 
             // ToDo
@@ -48,6 +49,7 @@ namespace summary_extractor
             {
                 // ファイルを作成する
                 FileStream fileStream = fileInfo.Create();
+                fileStream.Close();
             }
 
             // QA
@@ -62,6 +64,7 @@ namespace summary_extractor
             {
                 // ファイルを作成する
                 FileStream fileStream = fileInfo.Create();
+                fileStream.Close();
             }
 
             // other
@@ -76,6 +79,7 @@ namespace summary_extractor
             {
                 // ファイルを作成する
                 FileStream fileStream = fileInfo.Create();
+                fileStream.Close();
             }
 
 
@@ -89,14 +93,41 @@ namespace summary_extractor
             int flg = 0;
             int type = 0;
             List<string> list = new List<string>();
-            // ファイルを一行ずつ読み込み
-            foreach (string line in System.IO.File.ReadLines(@"./20230104.md"))
+            string fileName;
+            string fileNameWithOutExtension;
+
+            if (String.IsNullOrEmpty(textBox2.Text))
             {
+
+                // 日付取得
+                DateTime dt = DateTime.Now;
+                Console.WriteLine(dt.ToString("yyyy/MM/dd"));
+                fileName = dt.ToString("yyyyMMdd") + ".md";
+                FileInfo fileInfo = new FileInfo(fileName);
+                if (!File.Exists(fileName))
+                {
+                    // ファイルを作成する
+                    FileStream fileStream = fileInfo.Create();
+                    fileStream.Close();
+                }
+                fileName = dt.ToString("yyyyMMdd") + ".md";
+                fileNameWithOutExtension = Path.GetFileNameWithoutExtension(fileName);
+            }
+            else
+            {
+                fileName = @textBox2.Text;
+                fileNameWithOutExtension = Path.GetFileNameWithoutExtension(fileName);
+
+            }
+            // ファイルを一行ずつ読み込み
+            foreach (string line in System.IO.File.ReadLines(fileName))
+            {
+                Debug.Print(line);
                 if( flg == 0)
                 {
                     //<Todo/>開始
                     //</Todo>終わり
-                    if (line == "<Todo/>")
+                    if (line == "<ToDo/>")
                     {
                         type = 1;
                         flg = 1;
@@ -111,9 +142,9 @@ namespace summary_extractor
                 }
                 else
                 {
-                    if (line == "</Todo>" || line == "</QA>" || line == "</other>")
+                    if (line == "</ToDo>" || line == "</QA>" || line == "</other>")
                     {
-                        additionSentence(flg, list);
+                        additionSentence(flg, fileNameWithOutExtension, list);
                         //初期化
                         type = 0;
                         flg = 0;
@@ -131,7 +162,7 @@ namespace summary_extractor
         /// <summary>
         /// ファイルに抽出事項を追記する関数
         /// </summary>
-        private void additionSentence(int flg, List<string> S)
+        private void additionSentence(int flg, string fileNameWithOutExtension, List<string> S)
         {
             string path;
             // ファイルオープン
@@ -150,6 +181,8 @@ namespace summary_extractor
             }
 
             // 追記
+            // 日付を追記
+            File.AppendAllText(path, fileNameWithOutExtension + Environment.NewLine);
             foreach (string s in S)
             {
 
@@ -165,6 +198,30 @@ namespace summary_extractor
         private void closeBtn(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+
+        private void textBox2_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            string openFileName;
+
+            if (openFileDialog2.ShowDialog() == DialogResult.OK)
+            {
+                openFileName = openFileDialog2.FileName;
+            }
+            else
+            {
+                return;
+            }
+
+            textBox2.Clear();
+            textBox2.Text = openFileName;
+
         }
 
         /// <summary>
@@ -201,10 +258,11 @@ namespace summary_extractor
         private void button2_Click(object sender, EventArgs e)
         {
             ProcessStartInfo pInfo = new ProcessStartInfo();
-            pInfo.FileName = "notepad";
+            pInfo.FileName = "code";
             pInfo.Arguments = textBox1.Text;
 
             Process.Start(pInfo);
         }
+
     }
 }
